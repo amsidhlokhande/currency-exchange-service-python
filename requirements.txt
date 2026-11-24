@@ -1,0 +1,10 @@
+# ==============================================================================
+# Currency Exchange Service - Dependencies
+# ==============================================================================
+# All common web, WSGI, logging, HTTP client, and testing dependencies
+# and their security-vetted versions are managed centrally by:
+# enterprise-core-python
+# ==============================================================================
+
+enterprise-core-python
+boto3
