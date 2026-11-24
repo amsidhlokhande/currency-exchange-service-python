@@ -201,12 +201,34 @@ docker build `
 
 ### 2. Running the Docker Container
 
-Run the built image locally:
-
+#### Option A: Running Standalone
 ```powershell
 docker run --rm -p 8000:8000 --name currency-exchange-service <DOCKER_USERNAME>/currency-exchange-service-python:latest
 ```
 
+#### Option B: Running in a Shared Bridge Network (Communicating with `currency-conversion-service-python`)
+
+In Docker, separate containers cannot reach each other via `localhost` because each container has its own isolated loopback network namespace. To enable inter-service communication:
+
+1. **Create a shared user-defined Docker bridge network**:
+   ```powershell
+   docker network create currency-network
+   ```
+
+2. **Run `currency-exchange-service` attached to the network**:
+   ```powershell
+   docker run -d --rm `
+     --name currency-exchange-service `
+     --network currency-network `
+     -p 8000:8000 `
+     <DOCKER_USERNAME>/currency-exchange-service-python:latest
+   ```
+
+> [!TIP]
+> - **From other containers on `currency-network`** (e.g. `currency-conversion-service-python`): This service is reachable at `http://currency-exchange-service:8000/currency-exchange-service-python` through Docker's built-in DNS service discovery.
+> - **From your host machine**: This service is reachable at `http://localhost:8000/currency-exchange-service-python` via the mapped port `-p 8000:8000`.
+
+#### Verify Container Health & Endpoints
 Verify in another terminal or browser:
 ```powershell
 # Check health actuator
