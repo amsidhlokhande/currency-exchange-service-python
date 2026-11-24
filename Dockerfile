@@ -7,10 +7,6 @@ ARG PYTHON_IMAGE=python:3.12-slim
 FROM ${PYTHON_IMAGE} AS builder
 WORKDIR /build
 
-# Optional private PyPI registry token/url passed by GitHub Actions
-ARG PIP_EXTRA_INDEX_URL
-ENV PIP_EXTRA_INDEX_URL=${PIP_EXTRA_INDEX_URL}
-
 # GitHub Token for private repository cloning (if applicable)
 ARG GITHUB_TOKEN
 

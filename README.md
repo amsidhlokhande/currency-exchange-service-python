@@ -246,12 +246,12 @@ Add the following repository secrets:
 
 | Secret Name | Required | Description |
 | :--- | :---: | :--- |
-| `READ_PACKAGES_TOKEN` | **Yes** / *Recommended* | GitHub Personal Access Token (PAT) with `read:packages` and `repo` permissions to clone private dependencies such as `enterprise-core-python` and download packages. |
+| `READ_PACKAGES_TOKEN` | **Yes** / *Recommended* | GitHub Personal Access Token (PAT) with `repo` permission to clone private dependencies such as `enterprise-core-python`. |
 | `DOCKER_USERNAME` | **Yes** | Your Docker Hub account username. |
 | `DOCKER_PASSWORD` | **Yes** | Your Docker Hub Personal Access Token (PAT) or password. |
 
 > [!NOTE]
-> `READ_PACKAGES_TOKEN` is passed as a build argument into the Docker build process (`GITHUB_TOKEN` & `PIP_EXTRA_INDEX_URL`) to securely authenticate Git clones and package registries. If not set, it defaults to the workflow's `${{ secrets.GITHUB_TOKEN }}`.
+> `READ_PACKAGES_TOKEN` is passed as the `GITHUB_TOKEN` build argument into Docker to securely authenticate cloning private Git repositories. If not set, it defaults to the workflow's `${{ secrets.GITHUB_TOKEN }}`.
 
 ### 2. Workflow Pipeline Details
 
@@ -267,11 +267,13 @@ on:
 
 permissions:
   contents: read
-  packages: read
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    env:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
     steps:
       - name: Checkout Microservice Code
@@ -285,11 +287,8 @@ jobs:
         if: ${{ env.DOCKER_USERNAME != '' && env.DOCKER_PASSWORD != '' }}
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_PASSWORD }}
 
       # Build & Push Docker image
       - name: Build and Push Docker Image
@@ -298,13 +297,9 @@ jobs:
           context: .
           file: ./Dockerfile
           push: ${{ env.DOCKER_USERNAME != '' && env.DOCKER_PASSWORD != '' }}
-          tags: ${{ secrets.DOCKER_USERNAME || 'local' }}/${{ github.event.repository.name }}:latest
+          tags: ${{ env.DOCKER_USERNAME || 'local' }}/${{ github.event.repository.name || 'currency-exchange-service-python' }}:latest
           build-args: |
             GITHUB_TOKEN=${{ secrets.READ_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
-            PIP_EXTRA_INDEX_URL=https://${{ github.actor }}:${{ secrets.READ_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}@pypi.pkg.github.com/${{ github.repository_owner }}/simple
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 ```
 
 ### 3. Trigger Build & Push
