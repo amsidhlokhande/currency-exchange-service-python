@@ -5,6 +5,7 @@
 # and their security-vetted versions are managed centrally by:
 # enterprise-core-python
 # ==============================================================================
-
-enterprise-core-python
+enterprise-core-python @ git+https://github.com/amsidhlokhande/enterprise-core-python.git@v1.0.0
+#enterprise-core-python>=1.0.0
+#enterprise-core-python
 boto3

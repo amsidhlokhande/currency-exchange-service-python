@@ -11,15 +11,21 @@ WORKDIR /build
 ARG PIP_EXTRA_INDEX_URL
 ENV PIP_EXTRA_INDEX_URL=${PIP_EXTRA_INDEX_URL}
 
+# GitHub Token for private repository cloning (if applicable)
+ARG GITHUB_TOKEN
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential curl && \
+    git && \
     rm -rf /var/lib/apt/lists/*
 
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 COPY requirements.txt .
-RUN pip install --upgrade pip && \
+RUN if [ -n "$GITHUB_TOKEN" ]; then \
+        git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"; \
+    fi && \
+    pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: Hardened Runtime Container
